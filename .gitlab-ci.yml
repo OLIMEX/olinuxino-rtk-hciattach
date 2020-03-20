@@ -1,0 +1,62 @@
+stages:
+  - build
+  - merge
+  - deploy
+
+.build:
+  artifacts:
+    name: "$CI_PROJECT_NAME-$ARCH.$CI_COMMIT_SHORT_SHA"
+    paths:
+      - $CI_PROJECT_NAME-$ARCH.$CI_COMMIT_SHORT_SHA/*
+    when: on_success
+  before_script:
+    - dpkg --add-architecture $ARCH
+    - apt-get update && apt-get install -y --no-install-recommends $DEPS libc6-dev:$ARCH
+  script:
+    - ./make_debian_changelog.sh
+    - DEB_BUILD_OPTIONS=parallel=$(nproc) dpkg-buildpackage --post-clean --no-sign -a$ARCH -i -I -b
+    - mkdir $CI_PROJECT_NAME-$ARCH.$CI_COMMIT_SHORT_SHA
+    - mv -vf ../olinuxino-rtk-hciattach_*.deb $CI_PROJECT_NAME-$ARCH.$CI_COMMIT_SHORT_SHA/
+  tags:
+    - build
+  stage: build
+
+package:armhf:
+  extends: .build
+  variables:
+    ARCH: armhf
+    DEPS: gcc-arm-linux-gnueabihf
+
+package:arm64:
+  extends: .build
+  variables:
+    ARCH: arm64
+    DEPS: gcc-aarch64-linux-gnu
+
+package:merge:
+  artifacts:
+    name: "build"
+    paths:
+      - build/*
+  script:
+    - mkdir build/
+    - cp -vf $CI_PROJECT_NAME-*.$CI_COMMIT_SHORT_SHA/* build/
+  stage: merge
+
+deploy:staging:
+  stage: deploy
+  script:
+    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb buster build/olinuxino-rtk-hciattach*.deb
+    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb bionic build/olinuxino-rtk-hciattach*.deb
+    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb sid build/olinuxino-rtk-hciattach*.deb
+  tags:
+    - deploy
+
+deploy:repository:
+  stage: deploy
+  script:
+    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb buster build/olinuxino-rtk-hciattach*.deb
+    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb bionic build/olinuxino-rtk-hciattach*.deb
+    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb sid build/olinuxino-rtk-hciattach*.deb
+  tags:
+    - deploy
