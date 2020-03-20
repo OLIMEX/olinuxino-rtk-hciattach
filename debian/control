@@ -1,0 +1,12 @@
+Source: olinuxino-rtk-hciattach
+Section: misc
+Priority: optional
+Maintainer: Stefan Saraev <stefan@saraev.ca>
+Build-Depends: debhelper (>=9)
+Standards-Version: 4.1.4
+
+Package: olinuxino-rtk-hciattach
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: olinuxino-rtk-hciattach
+ rtk_hciattach
