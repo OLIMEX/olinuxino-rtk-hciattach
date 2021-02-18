@@ -46,19 +46,19 @@ package:merge:
 deploy:staging:
   stage: deploy
   script:
-    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb buster build/olinuxino-rtk-hciattach*.deb
-    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb bionic build/olinuxino-rtk-hciattach*.deb
-    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb focal build/olinuxino-rtk-hciattach*.deb
-    - reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb sid build/olinuxino-rtk-hciattach*.deb
+    - |
+      for repo in $REPOS ; do
+        reprepro -b /var/www/html/staging --ignore=wrongdistribution includedeb $repo build/olinuxino-rtk-hciattach*.deb
+      done
   tags:
     - deploy
 
 deploy:repository:
   stage: deploy
   script:
-    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb buster build/olinuxino-rtk-hciattach*.deb
-    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb bionic build/olinuxino-rtk-hciattach*.deb
-    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb focal build/olinuxino-rtk-hciattach*.deb
-    - reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb sid build/olinuxino-rtk-hciattach*.deb
+    - |
+      for repo in $REPOS ; do
+        reprepro -b /var/www/html/repository --ignore=wrongdistribution includedeb $repo build/olinuxino-rtk-hciattach*.deb
+      done
   tags:
     - deploy
